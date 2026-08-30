@@ -1,0 +1,3953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Bite · Menu Management</title>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --primary: #ff4757;
+            --primary-dark: #e84118;
+            --secondary: #ffa502;
+            --dark: #2f3542;
+            --light: #f1f2f6;
+            --white: #ffffff;
+            --gray: #747d8c;
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+            --card-radius: 20px;
+            --transition: all 0.25s ease;
+        }
+
+        body {
+            background: #f8f9fa;
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* =========================
+           SPLASH SCREEN
+        ========================== */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg,#1e1e24,#2f3542);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s, visibility 0.6s;
+            color: white;
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-content {
+            text-align: center;
+            animation: pulseZoom 2s infinite alternate;
+        }
+
+        .splash-logo-icon {
+            font-size: 5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            filter: drop-shadow(0 5px 15px rgba(255,71,87,0.4));
+        }
+
+        .splash-content h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(45deg,#ff4757,#ffa502);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulseZoom {
+            0% {
+                transform: scale(0.95);
+            }
+
+            100% {
+                transform: scale(1.05);
+            }
+        }
+
+        #app-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #app-container.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* =========================
+           HEADER
+        ========================== */
+        header {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e1e24 100%);
+            color: white;
+            padding: 30px 20px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "🍔🍕🥤";
+            position: absolute;
+            left: -10px;
+            top: -10px;
+            font-size: 6rem;
+            opacity: 0.08;
+            transform: rotate(-12deg);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        header::after {
+            content: "🧇🍟🥪";
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 5rem;
+            opacity: 0.08;
+            transform: rotate(8deg);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand-container i {
+            font-size: 2.8rem;
+            color: var(--primary);
+            filter: drop-shadow(0 0 12px rgba(255,71,87,0.3));
+        }
+
+        .brand-container h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--gray);
+            letter-spacing: 1px;
+            font-weight: 300;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* =========================
+           SEARCH
+        ========================== */
+        .search-section {
+            max-width: 600px;
+            margin: -25px auto 20px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-bar-wrapper {
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            border-radius: 60px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .search-bar-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 8px 30px rgba(255,71,87,0.15);
+        }
+
+        .search-bar-wrapper i {
+            color: var(--gray);
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+
+        .search-bar-wrapper input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            background: transparent;
+        }
+
+        /* =========================
+           CATEGORIES
+        ========================== */
+        .category-section {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .category-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 16px;
+            scrollbar-width: none;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 60px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .category-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-btn {
+            background: white;
+            border: 1px solid #dfe4ea;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            flex-shrink: 0;
+        }
+
+        .cat-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,71,87,0.25);
+        }
+
+        .cat-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(255,71,87,0.3);
+        }
+
+        /* =========================
+           MENU GRID
+        ========================== */
+        .menu-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        @media (min-width:640px) {
+            .food-grid {
+                grid-template-columns: repeat(2,1fr);
+            }
+        }
+
+        @media (min-width:1024px) {
+            .food-grid {
+                grid-template-columns: repeat(3,1fr);
+            }
+        }
+
+        @media (min-width:1280px) {
+            .food-grid {
+                grid-template-columns: repeat(4,1fr);
+            }
+        }
+
+        .food-card {
+            background: white;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .food-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--card-radius);
+            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.02) 100%);
+            pointer-events: none;
+        }
+
+        .food-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.10);
+        }
+
+        /* =========================
+           FOOD IMAGE
+        ========================== */
+
+        .food-img-container {
+            width: 100%;
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(145deg,#f0f2f5,#e6e9ef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .food-img-container img.lazy-menu-image {
+            content-visibility: auto;
+        }
+
+        .food-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .food-card:hover .food-img-container img {
+            transform: scale(1.04);
+        }
+
+        .food-image-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(145deg,#f1f2f6,#dfe4ea);
+            color: var(--gray);
+        }
+
+        .food-image-fallback i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #a4b0be;
+        }
+
+        .food-image-fallback strong {
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .food-image-fallback span {
+            margin-top: 5px;
+            font-size: 0.75rem;
+        }
+
+        .food-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            color: white;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+            border: 1px solid rgba(255,255,255,0.15);
+            z-index: 2;
+        }
+
+        .food-details {
+            padding: 18px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-between;
+        }
+
+        .food-category-tag {
+            font-size: 0.7rem;
+            color: var(--primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+
+        .food-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .food-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid #f1f2f6;
+        }
+
+        .food-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .browse-hint {
+            font-size: 0.8rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8f9fa;
+            padding: 4px 14px;
+            border-radius: 30px;
+            transition: var(--transition);
+        }
+
+        .browse-hint i {
+            color: var(--primary);
+            font-size: 0.8rem;
+        }
+
+        .food-card:hover .browse-hint {
+            background: var(--primary);
+            color: white;
+        }
+
+        .food-card:hover .browse-hint i {
+            color: white;
+        }
+
+        .no-results {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .no-results i {
+            font-size: 3.5rem;
+            color: var(--gray);
+            margin-bottom: 16px;
+        }
+
+        /* =========================
+           ORDER CONTACT
+        ========================== */
+        .order-contact-section {
+            background: linear-gradient(135deg,var(--dark) 0%,#1a1d24 100%);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            margin-top: 60px;
+            border-top: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-contact-section::before {
+            content: "📞🍕🥤";
+            position: absolute;
+            left: -20px;
+            bottom: -20px;
+            font-size: 8rem;
+            opacity: 0.04;
+            transform: rotate(-6deg);
+            pointer-events: none;
+        }
+
+        .order-contact-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .order-contact-section h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #dfe4ea;
+        }
+
+        .contact-number-link {
+            display: inline-block;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--secondary);
+            text-decoration: none;
+            background: rgba(255,255,255,0.04);
+            padding: 16px 40px;
+            border-radius: 60px;
+            border: 2px dashed rgba(255,165,2,0.3);
+            transition: var(--transition);
+            backdrop-filter: blur(4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .contact-number-link:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+            transform: scale(1.03);
+            border-color: var(--secondary);
+        }
+
+        .order-contact-section p.note {
+            margin-top: 16px;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* =========================
+           DECORATION
+        ========================== */
+        .deco-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0 5px;
+        }
+
+        .deco-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.2;
+        }
+
+        .deco-dots span:nth-child(2) {
+            opacity: 0.4;
+            width: 8px;
+            height: 8px;
+        }
+
+        .deco-dots span:nth-child(3) {
+            opacity: 0.6;
+        }
+
+        /* =========================================================
+           CAMPUS BITE AI CHATBOX
+        ========================================================== */
+
+        .ai-chat-button {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 64px;
+            height: 64px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+            color: white;
+            cursor: pointer;
+            z-index: 10000;
+            box-shadow: 0 12px 30px rgba(255,71,87,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .ai-chat-button:hover {
+            transform: scale(1.08);
+            box-shadow: 0 16px 35px rgba(255,71,87,0.5);
+        }
+
+        .ai-chat-button .chat-notification {
+            position: absolute;
+            right: 1px;
+            top: 1px;
+            width: 15px;
+            height: 15px;
+            background: #2ed573;
+            border: 3px solid white;
+            border-radius: 50%;
+        }
+
+        .ai-chat-window {
+            position: fixed;
+            right: 24px;
+            bottom: 100px;
+            width: 390px;
+            max-width: calc(100vw - 30px);
+            height: 570px;
+            max-height: calc(100vh - 130px);
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            z-index: 10001;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            border: 1px solid rgba(0,0,0,0.06);
+            animation: chatOpen 0.25s ease;
+        }
+
+        .ai-chat-window.active {
+            display: flex;
+        }
+
+        @keyframes chatOpen {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .ai-chat-header {
+            background: linear-gradient(135deg,var(--dark),#1e1e24);
+            color: white;
+            padding: 18px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ai-chat-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--primary),var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(255,71,87,0.3);
+        }
+
+        .ai-chat-title {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-chat-title strong {
+            font-size: 1rem;
+        }
+
+        .ai-chat-title span {
+            font-size: 0.7rem;
+            color: #ced6e0;
+        }
+
+        .ai-close-button {
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .ai-close-button:hover {
+            background: var(--primary);
+        }
+
+        .ai-chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            background: #f8f9fa;
+            scroll-behavior: smooth;
+        }
+
+        .ai-message-row {
+            display: flex;
+            margin-bottom: 13px;
+        }
+
+        .ai-message-row.user {
+            justify-content: flex-end;
+        }
+
+        .ai-message {
+            max-width: 82%;
+            padding: 11px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            line-height: 1.55;
+            word-wrap: break-word;
+        }
+
+        .ai-message-row.assistant .ai-message {
+            background: white;
+            color: var(--dark);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .ai-message-row.user .ai-message {
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message strong {
+            font-weight: 700;
+        }
+
+        .ai-item {
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .ai-item-name {
+            font-weight: 600;
+        }
+
+        .ai-item-price {
+            color: var(--primary);
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        .quick-suggestions {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding: 8px 12px;
+            background: white;
+            border-top: 1px solid #eee;
+            scrollbar-width: none;
+        }
+
+        .quick-suggestions::-webkit-scrollbar {
+            display: none;
+        }
+
+        .quick-btn {
+            flex-shrink: 0;
+            border: 1px solid #dfe4ea;
+            background: white;
+            color: var(--dark);
+            padding: 7px 11px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #fff5f6;
+        }
+
+        .ai-chat-input-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .ai-chat-input {
+            flex: 1;
+            border: 1px solid #dfe4ea;
+            border-radius: 30px;
+            padding: 11px 15px;
+            outline: none;
+            font-size: 0.85rem;
+            min-width: 0;
+        }
+
+        .ai-chat-input:focus {
+            border-color: var(--primary);
+        }
+
+        .ai-send-button {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .ai-send-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 14px;
+            background: white;
+            width: fit-content;
+            border-radius: 16px;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--gray);
+            border-radius: 50%;
+            animation: typing 1.2s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes typing {
+            0%,60%,100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .brand-container h1 {
+                font-size: 2rem;
+            }
+
+            .brand-container i {
+                font-size: 2.2rem;
+            }
+
+            .contact-number-link {
+                font-size: 1.6rem;
+                padding: 14px 25px;
+            }
+
+            .ai-chat-button {
+                width: 58px;
+                height: 58px;
+                right: 16px;
+                bottom: 16px;
+            }
+
+            .ai-chat-window {
+                right: 10px;
+                bottom: 85px;
+                width: calc(100vw - 20px);
+                height: min(600px, calc(100vh - 105px));
+                border-radius: 20px;
+            }
+        }
+
+
+        /* =========================================================
+           FINAL RESPONSIVE + IMAGE VISIBILITY OVERRIDES
+           Works on phones, tablets, laptops and desktops.
+           IMPORTANT: Never replace one food image with another.
+        ========================================================== */
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .menu-container,
+        .category-section,
+        .search-section {
+            width: 100%;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 24px;
+            width: 100%;
+        }
+
+        .food-card {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .food-img-container {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            height: auto;
+            min-height: 190px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f2f6;
+        }
+
+        /* Keep the EXACT assigned item image visible; never crop it away. */
+        .food-img-container img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+            object-position: center center;
+            background: #f1f2f6;
+        }
+
+        .food-image-fallback {
+            width: 100%;
+            height: 100%;
+            min-height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .ai-chat-window {
+            max-width: calc(100vw - 20px);
+        }
+
+        .ai-message,
+        .ai-item-name {
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        /* Large desktop */
+        @media (min-width: 1400px) {
+            .menu-container {
+                max-width: 1400px;
+            }
+
+            .food-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 28px;
+            }
+
+            .food-img-container {
+                aspect-ratio: 4 / 3;
+            }
+        }
+
+        /* Laptop / desktop */
+        @media (min-width: 1025px) and (max-width: 1399px) {
+            .food-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 22px;
+            }
+        }
+
+        /* Tablet */
+        @media (min-width: 601px) and (max-width: 1024px) {
+            .menu-container {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .food-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px;
+            }
+
+            .food-img-container {
+                aspect-ratio: 4 / 3;
+                min-height: 200px;
+            }
+
+            .food-details {
+                padding: 16px;
+            }
+
+            .food-name {
+                font-size: 1rem;
+            }
+        }
+
+        /* Mobile phones */
+        @media (max-width: 600px) {
+            header {
+                padding: 24px 14px 34px;
+            }
+
+            .brand-container {
+                gap: 10px;
+            }
+
+            .brand-container i {
+                font-size: 2rem;
+            }
+
+            .brand-container h1 {
+                font-size: 1.75rem;
+            }
+
+            header p {
+                font-size: 0.78rem;
+                padding: 0 10px;
+            }
+
+            .search-section {
+                padding: 0 12px;
+                margin-top: -22px;
+            }
+
+            .search-bar-wrapper {
+                padding: 12px 17px;
+            }
+
+            .search-bar-wrapper input {
+                font-size: 0.85rem;
+            }
+
+            .category-section {
+                padding: 0 10px;
+            }
+
+            .category-container {
+                border-radius: 18px;
+                padding: 9px;
+                gap: 8px;
+            }
+
+            .cat-btn {
+                padding: 9px 15px;
+                font-size: 0.78rem;
+            }
+
+            .menu-container {
+                padding: 0 12px;
+                margin-top: 24px;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+                margin-bottom: 18px;
+            }
+
+            /* One large card per row for clear food visibility. */
+            .food-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .food-card {
+                border-radius: 18px;
+            }
+
+            .food-img-container {
+                aspect-ratio: 16 / 10;
+                min-height: 0;
+                max-height: 320px;
+            }
+
+            .food-details {
+                padding: 16px;
+            }
+
+            .food-category-tag {
+                font-size: 0.68rem;
+            }
+
+            .food-name {
+                font-size: 1rem;
+                line-height: 1.35;
+            }
+
+            .food-price {
+                font-size: 1.1rem;
+            }
+
+            .browse-hint {
+                font-size: 0.7rem;
+                padding: 5px 10px;
+            }
+
+            .order-contact-section {
+                margin-top: 40px;
+                padding: 38px 14px;
+            }
+
+            .order-contact-section h2 {
+                font-size: 1.15rem;
+            }
+
+            .contact-number-link {
+                font-size: 1.45rem;
+                padding: 12px 20px;
+            }
+
+            /* Mobile AI chatbox */
+            .ai-chat-button {
+                width: 58px;
+                height: 58px;
+                right: 15px;
+                bottom: 15px;
+                font-size: 1.35rem;
+            }
+
+            .ai-chat-window {
+                left: 8px;
+                right: 8px;
+                bottom: 82px;
+                width: auto;
+                height: calc(100dvh - 100px);
+                max-height: 650px;
+                border-radius: 20px;
+            }
+
+            .ai-chat-header {
+                padding: 14px;
+            }
+
+            .ai-chat-messages {
+                padding: 13px;
+            }
+
+            .ai-message {
+                max-width: 88%;
+                font-size: 0.82rem;
+                line-height: 1.6;
+            }
+
+            .quick-suggestions {
+                padding: 8px;
+            }
+
+            .quick-btn {
+                font-size: 0.68rem;
+                padding: 7px 10px;
+            }
+
+            .ai-chat-input-area {
+                padding: 9px;
+            }
+
+            .ai-chat-input {
+                font-size: 0.82rem;
+                padding: 10px 13px;
+            }
+
+            .ai-send-button {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 380px) {
+            .brand-container h1 {
+                font-size: 1.55rem;
+            }
+
+            .brand-container i {
+                font-size: 1.7rem;
+            }
+
+            .food-img-container {
+                aspect-ratio: 16 / 10;
+            }
+
+            .food-name {
+                font-size: 0.95rem;
+            }
+
+            .food-price {
+                font-size: 1rem;
+            }
+
+            .ai-chat-window {
+                left: 5px;
+                right: 5px;
+                bottom: 78px;
+            }
+
+            .ai-message {
+                max-width: 92%;
+            }
+        }
+
+        /* Landscape phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .ai-chat-window {
+                height: calc(100dvh - 80px);
+                bottom: 70px;
+            }
+
+            .ai-chat-messages {
+                padding: 10px;
+            }
+        }
+
+        /* Touch-friendly controls */
+        button,
+        a,
+        input {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button,
+        a {
+            touch-action: manipulation;
+        }
+
+        /* =========================================================
+           FINAL MOBILE AI CHAT FIX
+           The close button stays visible and easy to tap on phones.
+        ========================================================== */
+        .ai-chat-button,
+        .ai-close-button,
+        .ai-send-button,
+        .quick-btn {
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .ai-close-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            min-height: 42px;
+            flex: 0 0 42px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            position: relative;
+            z-index: 5;
+        }
+
+        .ai-chat-header {
+            flex: 0 0 auto;
+            min-height: 68px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .ai-chat-messages {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-suggestions,
+        .ai-chat-input-area {
+            flex: 0 0 auto;
+        }
+
+        /* Phones: use the complete visible viewport so the header/X
+           can never be pushed above the screen. */
+        @media (max-width: 600px) {
+            .ai-chat-window {
+                position: fixed;
+                top: 10px;
+                right: 8px;
+                bottom: 10px;
+                left: 8px;
+                width: auto;
+                height: auto;
+                max-width: none;
+                max-height: none;
+                margin: 0;
+                border-radius: 20px;
+                overflow: hidden;
+                z-index: 10001;
+                display: none;
+                flex-direction: column;
+            }
+
+            .ai-chat-window.active {
+                display: flex;
+            }
+
+            .ai-chat-header {
+                padding: 12px 12px 12px 14px;
+                min-height: 66px;
+            }
+
+            .ai-chat-brand {
+                min-width: 0;
+                flex: 1 1 auto;
+            }
+
+            .ai-avatar {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                font-size: 1.05rem;
+            }
+
+            .ai-chat-title strong {
+                font-size: 0.95rem;
+            }
+
+            .ai-chat-title span {
+                font-size: 0.68rem;
+            }
+
+            .ai-close-button {
+                width: 46px;
+                height: 46px;
+                min-width: 46px;
+                min-height: 46px;
+                flex-basis: 46px;
+                margin-left: 8px;
+                font-size: 1.35rem;
+            }
+
+            .ai-chat-messages {
+                padding: 13px;
+            }
+
+            .ai-message {
+                max-width: 90%;
+                font-size: 0.84rem;
+                line-height: 1.55;
+            }
+
+            .quick-suggestions {
+                max-height: 58px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 8px;
+            }
+
+            .quick-btn {
+                min-height: 38px;
+                font-size: 0.72rem;
+                padding: 7px 11px;
+            }
+
+            .ai-chat-input-area {
+                padding: 9px;
+                gap: 8px;
+                padding-bottom: max(9px, env(safe-area-inset-bottom));
+            }
+
+            .ai-chat-input {
+                min-width: 0;
+                min-height: 44px;
+                font-size: 0.9rem;
+                padding: 10px 13px;
+            }
+
+            .ai-send-button {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                min-height: 44px;
+            }
+
+            /* Keep the floating button out of the chat window. */
+            .ai-chat-button {
+                right: 15px;
+                bottom: max(15px, env(safe-area-inset-bottom));
+                width: 58px;
+                height: 58px;
+                z-index: 10000;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 380px) {
+            .ai-chat-window {
+                top: 6px;
+                right: 5px;
+                bottom: 6px;
+                left: 5px;
+            }
+
+            .ai-chat-header {
+                min-height: 62px;
+                padding: 9px 9px 9px 11px;
+            }
+
+            .ai-close-button {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                min-height: 44px;
+                flex-basis: 44px;
+            }
+        }
+
+        /* Landscape phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .ai-chat-window {
+                top: 6px;
+                bottom: 6px;
+                left: 8px;
+                right: 8px;
+            }
+
+            .ai-chat-header {
+                min-height: 54px;
+                padding: 7px 10px;
+            }
+
+            .ai-avatar {
+                width: 34px;
+                height: 34px;
+                min-width: 34px;
+            }
+
+            .ai-close-button {
+                width: 40px;
+                height: 40px;
+                min-width: 40px;
+                min-height: 40px;
+                flex-basis: 40px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- =========================
+     SPLASH
+========================== -->
+
+<div id="splash-screen">
+    <div class="splash-content">
+        <div class="splash-logo-icon">
+            <i class="fa-solid fa-utensils"></i>
+        </div>
+
+        <h1>Campus Bite</h1>
+
+        <p>Your Campus, Your Cravings</p>
+
+        <div class="loader-spinner"></div>
+    </div>
+</div>
+
+<!-- =========================
+     APP
+========================== -->
+
+<div id="app-container">
+
+    <header>
+        <div class="brand-container">
+            <i class="fa-solid fa-burger"></i>
+            <h1>Campus Bite</h1>
+        </div>
+
+        <p>Fresh Food, Fast Service, Unmatched Taste</p>
+
+        <div class="deco-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <!-- SEARCH -->
+
+    <div class="search-section">
+        <div class="search-bar-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search for your favorite food item..."
+            >
+        </div>
+    </div>
+
+    <!-- CATEGORIES -->
+
+    <div class="category-section">
+        <div class="category-container" id="categoryContainer">
+
+            <button class="cat-btn active" data-category="All">
+                <i class="fa-solid fa-border-all"></i>
+                All
+            </button>
+
+            <button class="cat-btn" data-category="Pizza">🍕 Pizza</button>
+            <button class="cat-btn" data-category="Burger">🍔 Burger</button>
+            <button class="cat-btn" data-category="Pasta">🍝 Pasta</button>
+            <button class="cat-btn" data-category="Milkshake">🥤 Milkshake</button>
+            <button class="cat-btn" data-category="Falooda">🍨 Falooda</button>
+            <button class="cat-btn" data-category="Sandwich">🥪 Sandwich</button>
+            <button class="cat-btn" data-category="Wraps">🌯 Wraps</button>
+            <button class="cat-btn" data-category="Fried Chicken">🍗 Fried Chicken</button>
+            <button class="cat-btn" data-category="French Fries">🍟 French Fries</button>
+            <button class="cat-btn" data-category="Waffles">🧇 Waffles</button>
+            <button class="cat-btn" data-category="Quick Bites">🍴 Quick Bites</button>
+            <button class="cat-btn" data-category="Chicken Wings">🍗 Chicken Wings</button>
+            <button class="cat-btn" data-category="Momos">🥟 Momos</button>
+            <button class="cat-btn" data-category="Thickshakes">🥛 Thickshakes</button>
+            <button class="cat-btn" data-category="Mocktails">🍹 Mocktails</button>
+
+        </div>
+    </div>
+
+    <!-- MENU -->
+
+    <main class="menu-container">
+
+        <h2 class="section-title" id="sectionTitle">
+            <i class="fa-solid fa-utensils"></i>
+            Our Delicious Menu
+        </h2>
+
+        <div class="food-grid" id="foodGrid"></div>
+
+    </main>
+
+    <!-- ORDER -->
+
+    <section class="order-contact-section">
+
+        <div class="order-contact-container">
+
+            <h2>📞 For Orders, Please Contact</h2>
+
+            <a href="tel:7075138829" class="contact-number-link">
+                70751 38829
+            </a>
+
+            <p class="note">
+                Tap the number above directly from your mobile to call and place your order instantly!
+            </p>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- =========================================================
+     CAMPUS BITE AI CHAT BUTTON
+========================================================== -->
+
+<button
+    class="ai-chat-button"
+    id="aiChatButton"
+    aria-label="Open Campus Bite AI"
+    title="Campus Bite AI"
+>
+    <i class="fa-solid fa-robot"></i>
+    <span class="chat-notification"></span>
+</button>
+
+<!-- =========================================================
+     CAMPUS BITE AI CHAT WINDOW
+========================================================== -->
+
+<div class="ai-chat-window" id="aiChatWindow">
+
+    <!-- HEADER -->
+
+    <div class="ai-chat-header">
+
+        <div class="ai-chat-brand">
+
+            <div class="ai-avatar">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+
+            <div class="ai-chat-title">
+                <strong>Campus Bite AI</strong>
+                <span>Menu Assistant · Online</span>
+            </div>
+
+        </div>
+
+        <button
+            class="ai-close-button"
+            id="aiCloseButton"
+            aria-label="Close chat"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+    </div>
+
+    <!-- MESSAGES -->
+
+    <div class="ai-chat-messages" id="aiChatMessages">
+
+        <div class="ai-message-row assistant">
+
+            <div class="ai-message">
+                👋 Hi! Welcome to <strong>Campus Bite</strong>.<br>
+                How can I help you?
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- QUICK SUGGESTIONS -->
+
+    <div class="quick-suggestions">
+
+        <button class="quick-btn" data-question="Show me the menu">
+            🍕 View Menu
+        </button>
+
+        <button class="quick-btn" data-question="Show me items under ₹150">
+            💰 Items Under ₹150
+        </button>
+
+        <button class="quick-btn" data-question="Show me vegetarian items">
+            🌱 Vegetarian Items
+        </button>
+
+        <button class="quick-btn" data-question="Show me non-vegetarian items">
+            🍗 Non-Veg Items
+        </button>
+
+        <button class="quick-btn" data-question="Recommend something">
+            ⭐ Recommend Something
+        </button>
+
+    </div>
+
+    <!-- INPUT -->
+
+    <div class="ai-chat-input-area">
+
+        <input
+            type="text"
+            class="ai-chat-input"
+            id="aiChatInput"
+            placeholder="Ask about our menu..."
+            autocomplete="off"
+        >
+
+        <button
+            class="ai-send-button"
+            id="aiSendButton"
+            aria-label="Send message"
+        >
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /* =========================================================
+       WELCOME VOICE
+    ========================================================== */
+
+    function playWelcomeVoice() {
+
+        if (!('speechSynthesis' in window)) return;
+
+        window.speechSynthesis.cancel();
+
+        const msg = new SpeechSynthesisUtterance(
+            'Welcome to Campus Bite'
+        );
+
+        msg.rate = 0.9;
+        msg.pitch = 1;
+        msg.volume = 1;
+
+        const voices = window.speechSynthesis.getVoices();
+
+        const preferred =
+            voices.find(v => v.lang.toLowerCase().includes('en-in')) ||
+            voices.find(v => v.lang.toLowerCase().includes('en-us')) ||
+            voices.find(v => v.lang.toLowerCase().includes('en'));
+
+        if (preferred) {
+            msg.voice = preferred;
+        }
+
+        window.speechSynthesis.speak(msg);
+    }
+
+    let welcomePlayed = false;
+
+    window.addEventListener('load', () => {
+
+        setTimeout(() => {
+
+            if (!welcomePlayed) {
+                welcomePlayed = true;
+                playWelcomeVoice();
+            }
+
+        }, 700);
+
+    });
+
+    document.addEventListener(
+        'click',
+        () => {
+
+            if (!welcomePlayed) {
+                welcomePlayed = true;
+                playWelcomeVoice();
+            }
+
+        },
+        { once: true }
+    );
+
+
+    /* =========================================================
+       MENU DATA
+       SINGLE SOURCE OF TRUTH FOR WEBSITE + AI
+    ========================================================== */
+
+    const menuItems = [
+
+        /* ================= PIZZA ================= */
+
+        {
+            name: "Butter Chicken Crust Pizza",
+            category: "Pizza",
+            price: 110,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZpaAXrqFomkAQB9g1m9gUySP1k1vsn0eJU21-nlR3wA4cFQV_pnWXGbJN&s=10"
+        },
+
+        {
+            name: "Royal Tandoori Treat Pizza",
+            category: "Pizza",
+            price: 110,
+            type: "Non-Veg",
+            img: "https://cdn2.clevup.in/360704/65211119-4d82-4a5e-ae7c-aeb58461a911-1774014883933.png?width=600&format=webp"
+        },
+
+        {
+            name: "BBQ Chicken Blaze Pizza",
+            category: "Pizza",
+            price: 109,
+            type: "Non-Veg",
+            img: "https://static.vecteezy.com/system/resources/thumbnails/046/883/679/small/delicious-bbq-chicken-pizza-with-leftover-chicken-served-on-wooden-board-photo.jpeg"
+        },
+
+        {
+            name: "Meat Lover Feast Pizza",
+            category: "Pizza",
+            price: 120,
+            type: "Non-Veg",
+            img: "https://www.shutterstock.com/image-photo/meat-pizza-on-tray-600w-2434010499.jpg"
+        },
+
+        {
+            name: "Classic Margherita Pizza",
+            category: "Pizza",
+            price: 70,
+            type: "Veg",
+            img: "https://www.onestalove.in/wp-content/uploads/2021/08/onesta_menu_Classic_Margherita.png"
+        },
+
+        {
+            name: "Garlic Zaika Pizza",
+            category: "Pizza",
+            price: 99,
+            type: "Veg",
+            img: "https://b.zmtcdn.com/data/dish_photos/167/15f4d6e7d61beea216af62f509e16167.jpeg"
+        },
+
+        {
+            name: "Veggie Supreme Pizza",
+            category: "Pizza",
+            price: 110,
+            type: "Veg",
+            img: "https://cdn.apartmenttherapy.info/image/upload/v1559190008/k/archive/8d90a437304e47696110f6b3ba53d550dbb89fe2.jpg"
+        },
+
+        {
+            name: "Paneer Paradise Pizza",
+            category: "Pizza",
+            price: 120,
+            type: "Veg",
+            img: "https://b.zmtcdn.com/data/dish_photos/d22/0a49c47c2393b8594c7137b64738ad22.png?fit=around%7C200%3A200&crop=200%3A200%3B%2A%2C%2A"
+        },
+
+        {
+            name: "Golden Corn Pizza",
+            category: "Pizza",
+            price: 109,
+            type: "Veg",
+            img: "https://static.toiimg.com/thumb/59863239.cms?width=1200&height=900"
+        },
+
+
+        /* ================= BURGER ================= */
+
+        {
+            name: "Tandoori Zing Burger",
+            category: "Burger",
+            price: 99,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWUOYDpz4TFab8LDgop9C6xRMIVSXyx1jRciGsbf9hu_NonOXhVzqzhGjv&s=10"
+        },
+
+        {
+            name: "Tex-Mex Chicken Burger",
+            category: "Burger",
+            price: 99,
+            type: "Non-Veg",
+            img: "https://insearchofyummyness.com/wp-content/uploads/2014/07/Tex-Mex-Chicken-Burger.jpg"
+        },
+
+        {
+            name: "The Garlic Rooster Burger",
+            category: "Burger",
+            price: 99,
+            type: "Non-Veg",
+            img: "https://ichef.bbci.co.uk/food/ic/food_16x9_1600/recipes/garlic_churrasco_chicken_78910_16x9.jpg"
+        },
+
+        {
+            name: "Special Chicken Burger",
+            category: "Burger",
+            price: 110,
+            type: "Non-Veg",
+            img: "https://hips.hearstapps.com/hmg-prod/images/chicken-burgers-lead-667b185b5c64f.jpg"
+        },
+
+        {
+            name: "Crispy-o-Veg Burger",
+            category: "Burger",
+            price: 89,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Herb 'n' Heat Burger",
+            category: "Burger",
+            price: 99,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHY8jgaWDVXAPkPmBocCOSQKFjnHOUED1cwa14NYOBBgAz430Cdige3io1&s=10"
+        },
+
+        {
+            name: "Tex-Mex Veg Burger",
+            category: "Burger",
+            price: 89,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG9SRBuO7M0EjLko-fYbqPp0ZrZ404-V7nf3RF5SrRKVG1510GEfkkhjK8&s=10"
+        },
+
+
+        /* ================= PASTA ================= */
+
+        {
+            name: "Chicken Creamy Penne Pasta",
+            category: "Pasta",
+            price: 120,
+            type: "Non-Veg",
+            img: "https://www.saltandlavender.com/wp-content/uploads/2020/03/chicken-penne-pasta-recipe-4-720x1009.jpg"
+        },
+
+        {
+            name: "Aglio Olio Chicken Pasta",
+            category: "Pasta",
+            price: 120,
+            type: "Non-Veg",
+            img: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Chicken Arrabbiata Pasta",
+            category: "Pasta",
+            price: 110,
+            type: "Non-Veg",
+            img: "https://images.unsplash.com/photo-1608897013039-887f21d8c804?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Veg Creamy Penne Pasta",
+            category: "Pasta",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1645112411341-6c4fd023714a?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Alfredo Pasta",
+            category: "Pasta",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Arrabbiata Pasta",
+            category: "Pasta",
+            price: 109,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=600&q=80"
+        },
+
+
+        /* ================= MILKSHAKE ================= */
+
+        {
+            name: "Vanilla Milkshake",
+            category: "Milkshake",
+            price: 69,
+            type: "Veg",
+            img: "https://iambaker.net/wp-content/uploads/2024/06/Vanilla-milkshake-3.jpg"
+        },
+
+        {
+            name: "Strawberry Milkshake",
+            category: "Milkshake",
+            price: 79,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Passion Fruit Punch Milkshake",
+            category: "Milkshake",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Oreo Milkshake",
+            category: "Milkshake",
+            price: 99,
+            type: "Veg",
+            img: "https://thumbs.dreamstime.com/b/enjoy-ultimate-oreo-milkshake-ai-generated-image-featuring-tall-glass-filled-creamy-blend-vanilla-ice-cream-276170279.jpg"
+        },
+
+        {
+            name: "Brownie With Chocolate Milkshake",
+            category: "Milkshake",
+            price: 109,
+            type: "Veg",
+            img: "https://img.magnific.com/free-photo/ice-cream-with-cookie-table_140725-9225.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+
+        /* ================= FALOODA ================= */
+
+        {
+            name: "Fruits Falooda",
+            category: "Falooda",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Royal Falooda",
+            category: "Falooda",
+            price: 109,
+            type: "Veg",
+            img: "https://i.pinimg.com/originals/29/db/7a/29db7afda22591ef4e2f8b99ebd37215.jpg?nii=t"
+        },
+
+        {
+            name: "Dry Fruits Falooda",
+            category: "Falooda",
+            price: 99,
+            type: "Veg",
+            img: "https://i.pinimg.com/474x/52/b3/9a/52b39a0127d52c2fb3cad2d07311995d.jpg"
+        },
+
+        {
+            name: "Ice Cream Falooda",
+            category: "Falooda",
+            price: 89,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUug2IXC972U7pVIXdCY-5md-hEhl_GjwSVR2YtDB9XCbZryamSPptDbTf&s=10"
+        },
+
+
+        /* ================= SANDWICH ================= */
+
+        {
+            name: "Original Chicken Stacher Sandwich",
+            category: "Sandwich",
+            price: 99,
+            type: "Non-Veg",
+            img: "https://images.unsplash.com/photo-1700937244987-92488ab2ada5?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hpY2tlbiUyMHNhbmR3aWNofGVufDB8fDB8fHww"
+        },
+
+        {
+            name: "Roasted Garlic Bite Sandwich",
+            category: "Sandwich",
+            price: 109,
+            type: "Non-Veg",
+            img: "https://bsinthekitchen.files.wordpress.com/2010/07/sandwich-3.jpg"
+        },
+
+        {
+            name: "The Fried Chicken Sandwich",
+            category: "Sandwich",
+            price: 120,
+            type: "Non-Veg",
+            img: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Urban Rooster Club Sandwich",
+            category: "Sandwich",
+            price: 130,
+            type: "Non-Veg",
+            img: "https://static.toiimg.com/thumb/83740315.cms?width=1200&height=900"
+        },
+
+        {
+            name: "Paneer Sandwich",
+            category: "Sandwich",
+            price: 99,
+            type: "Veg",
+            img: "https://img.magnific.com/free-photo/side-view-club-sandwich-with-salted-cucumbers-lemon-olives-round-white-plate_176474-3049.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+        {
+            name: "Corn Delight Sandwich",
+            category: "Sandwich",
+            price: 99,
+            type: "Veg",
+            img: "https://www.vegrecipesofindia.com/wp-content/uploads/2013/07/corn-sandwich-recipe-1.jpg"
+        },
+
+        {
+            name: "The Garden Classic Sandwich",
+            category: "Sandwich",
+            price: 89,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1540713164800-4691238c1b73?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Zesty Grilled Paneer Sandwich",
+            category: "Sandwich",
+            price: 99,
+            type: "Veg",
+            img: "https://www.indianhealthyrecipes.com/wp-content/uploads/2021/06/paneer-sandwich-recipe.jpg"
+        },
+
+        {
+            name: "Chocolate Cheesy Sandwich",
+            category: "Sandwich",
+            price: 80,
+            type: "Chocolate Sandwich",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy3GBoQixUYMmFs1lcfW2w1t_vM9wUlUOHKKnOulCyHrtOSZaDjbwJSF8&s=10"
+        },
+
+        {
+            name: "Loaded Chocolate Sandwich",
+            category: "Sandwich",
+            price: 69,
+            type: "Chocolate Sandwich",
+            img: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Grilled Chocolate Sandwich",
+            category: "Sandwich",
+            price: 69,
+            type: "Chocolate Sandwich",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMLQCMB6YtqIT6OsMU8oibouSEEnxrwZEMSNFq0Gcs2Y7q1-yg5iUZjwo&s=10"
+        },
+
+        {
+            name: "KitKat Sandwich",
+            category: "Sandwich",
+            price: 99,
+            type: "Chocolate Sandwich",
+            img: "https://i-media.vyaparify.com/vcards/products/58244/product_1722950814.png"
+        },
+
+
+        /* ================= WRAPS ================= */
+
+        {
+            name: "Chicken 'n' Wrap",
+            category: "Wraps",
+            price: 99,
+            type: "Non-Veg",
+            img: "https://img.magnific.com/premium-photo/chicken-apple-wraps-wooden-table_961875-315488.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+        {
+            name: "Tandoori Tango Wrap",
+            category: "Wraps",
+            price: 110,
+            type: "Non-Veg",
+            img: "https://img.magnific.com/free-photo/savory-meat-wrap-with-fresh-vegetables_84443-85040.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+        {
+            name: "Fried Chicken Wrap",
+            category: "Wraps",
+            price: 120,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ11o2oPLJxViuf_vZjWcnk5FbOHBohdDOC4B6EeMwRnewt7F3foxNNsG4J&s=10"
+        },
+
+        {
+            name: "Veggie Delight Wrap",
+            category: "Wraps",
+            price: 89,
+            type: "Veg",
+            img: "https://img.magnific.com/free-photo/burritos-wraps-with-chicken-vegetables-chicken-burrito-mexican-food_2829-6980.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+        {
+            name: "Paneer Milk Pocket Wrap",
+            category: "Wraps",
+            price: 99,
+            type: "Veg",
+            img: "https://ministryofcurry.com/wp-content/uploads/2019/10/paneer-kathi-rolls-1-1-850x1133.jpg"
+        },
+
+        {
+            name: "Corn Garlic Twist Wrap",
+            category: "Wraps",
+            price: 99,
+            type: "Veg",
+            img: "https://www.tarladalal.com/thumb/500x500/media/recipe/mainphoto/2025/10/20/Stuffed_Corn_and_Capsicum_Wrap.webp"
+        },
+
+
+        /* ================= FRIED CHICKEN ================= */
+
+        {
+            name: "Peri Peri Chicken Popcorn",
+            category: "Fried Chicken",
+            price: 100,
+            type: "Non-Veg",
+            img: "https://img-cdn.publive.online/fit-in/640x430/filters:format(webp)/sanjeev-kapoor/media/media_files/pip1BmOpZd1wO71LTA0P.JPG"
+        },
+
+        {
+            name: "Dragon Chicken Popcorn",
+            category: "Fried Chicken",
+            price: 159,
+            type: "Non-Veg",
+            img: "https://img.magnific.com/free-photo/close-up-delicious-asian-food_23-2150535863.jpg?semt=ais_hybrid&w=740&q=80"
+        },
+
+        {
+            name: "Loaded Chicken Popcorn",
+            category: "Fried Chicken",
+            price: 149,
+            type: "Non-Veg",
+            img: "https://www.kannammacooks.com/wp-content/uploads/popcorn-chicken-recipe-baked-22.jpg"
+        },
+
+
+        /* ================= FRENCH FRIES ================= */
+
+        {
+            name: "Salted Fries",
+            category: "French Fries",
+            price: 60,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShWrKJrOrFD7blXbqtKNKPo5d1Jdzr47I5XueTc4ppJA&s=10"
+        },
+
+        {
+            name: "Masala Fries",
+            category: "French Fries",
+            price: 70,
+            type: "Veg",
+            img: "https://www.shutterstock.com/image-photo/masala-fries-isolated-on-transparent-600w-2734324673.jpg"
+        },
+
+        {
+            name: "Peri Peri Fries",
+            category: "French Fries",
+            price: 60,
+            type: "Veg",
+            img: "https://hungritos.com/wp-content/uploads/2023/04/pri-peri-fries.png"
+        },
+
+        {
+            name: "Creamy Fries",
+            category: "French Fries",
+            price: 79,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2vTH22Bml-XkAVxL5wVDKg4WqAHI_Ucb6nYUnhYKMNdM0VyWYFAQ80Eds&s=10"
+        },
+
+        {
+            name: "Masala Loaded Fries (with Chicken)",
+            category: "French Fries",
+            price: 109,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJrEXXg1EEaUudCyk4eUoZQa4GZHDT8yoO2prxdCARLD2DAq8zjY9vkco&s=10"
+        },
+
+
+        /* ================= WAFFLES ================= */
+
+        {
+            name: "Belgian Chocolate White Waffle",
+            category: "Waffles",
+            price: 79,
+            type: "Veg",
+            img: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto/dw5g4i6mnrabithmymqm"
+        },
+
+        {
+            name: "Belgian Chocolate Milk Waffle",
+            category: "Waffles",
+            price: 89,
+            type: "Veg",
+            img: "https://media-assets.swiggy.com/swiggy/image/upload/f_auto,q_auto,fl_lossy/RX_THUMBNAIL/IMAGES/VENDOR/2025/8/1/e6c26c19-6df8-4955-9096-c62a2b445008_1162200.jpg"
+        },
+
+        {
+            name: "Belgian Chocolate Dark Waffle",
+            category: "Waffles",
+            price: 89,
+            type: "Veg",
+            img: "https://thehintofrosemary.com/wp-content/uploads/2019/12/chocolate-waffle-cover-pic-scaled.jpg"
+        },
+
+        {
+            name: "Dairy Milk Waffle",
+            category: "Waffles",
+            price: 99,
+            type: "Veg",
+            img: "https://i.ytimg.com/vi/YsImRwhE6Fc/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDXnYw7kwM1UbnaGaccwsMM7hDZdw"
+        },
+
+        {
+            name: "KitKat Waffle",
+            category: "Waffles",
+            price: 99,
+            type: "Veg",
+            img: "https://honeycastle.co.in/wp-content/uploads/2025/09/Classic-Waffle-Recipe-Debjanir-Rannaghar.jpg"
+        },
+
+        {
+            name: "Nutella Waffle",
+            category: "Waffles",
+            price: 79,
+            type: "Veg",
+            img: "https://99pancakes.in/cdn/shop/files/Naughtynutellawaffle.jpg?v=1755018595"
+        },
+
+
+        /* ================= QUICK BITES ================= */
+
+        {
+            name: "Vegetable Samosa",
+            category: "Quick Bites",
+            price: 60,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Punjabi Samosa",
+            category: "Quick Bites",
+            price: 60,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Sweet Corn Samosa",
+            category: "Quick Bites",
+            price: 60,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Butter Garlic Bread",
+            category: "Quick Bites",
+            price: 70,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1619533306970-d8e6f1f5d502?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Cheesy Garlic Bread",
+            category: "Quick Bites",
+            price: 89,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&w=600&q=80"
+        },
+
+
+        /* ================= CHICKEN WINGS ================= */
+
+        {
+            name: "Peri Peri Wings",
+            category: "Chicken Wings",
+            price: 159,
+            type: "Non-Veg",
+            img: "https://beatthebudget.com/wp-content/uploads/2021/04/Peri-Peri-Chicken-featured-image.jpg"
+        },
+
+        {
+            name: "Salted Wings",
+            category: "Chicken Wings",
+            price: 150,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSY-_mzR9QvahUuNA2LmvL3IrqkEUfaRZhukt9IXv1DyMEFc9tm5GJnvQmq&s=10"
+        },
+
+        {
+            name: "Cotton Crispy Chicken (2 pcs)",
+            category: "Chicken Wings",
+            price: 149,
+            type: "Non-Veg",
+            img: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=600&q=80"
+        },
+
+
+        /* ================= MOMOS ================= */
+
+        {
+            name: "Veg Steam Momo's",
+            category: "Momos",
+            price: 60,
+            type: "Veg",
+            img: "https://cdn1.foodviva.com/static-content/food-images/snacks-recipes/veg-momos/veg-momos.jpg"
+        },
+
+        {
+            name: "Veg Fried Momo's",
+            category: "Momos",
+            price: 70,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDJRKJVLxhMnpfO2CscAp0rfbLqPMLmSG5tE1fP6rGzPRhTaxHKdgRNms&s=10"
+        },
+
+        {
+            name: "Paneer Steam Momo's",
+            category: "Momos",
+            price: 60,
+            type: "Veg",
+            img: "https://swadelazeez.com/wp-content/uploads/2024/12/images-5-10.jpg"
+        },
+
+        {
+            name: "Paneer Fried Momo's",
+            category: "Momos",
+            price: 70,
+            type: "Veg",
+            img: "https://storage.googleapis.com/shy-pub/360704/paneerfrymomos-1746271163610.webp"
+        },
+
+        {
+            name: "Chicken Steam Momo's",
+            category: "Momos",
+            price: 79,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa4b-QGOiDCpa867mIbs1V3tiJFnVwIJSgnFF1BPa4DLCvQftB4o2-YxeV&s=10"
+        },
+
+        {
+            name: "Chicken Fried Momo's",
+            category: "Momos",
+            price: 89,
+            type: "Non-Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYPPRNVJYF2dDcTZhlAcctJmUudG_EGPFOxKrOa6cTi7VE2EI00TCdcHeW&s=10"
+        },
+
+        {
+            name: "Chicken Nuggets Momo's",
+            category: "Momos",
+            price: 79,
+            type: "Non-Veg",
+            img: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_240,h_240/FOOD_CATALOG/IMAGES/CMS/2026/6/25/1339b73b-d1d7-4c95-acb2-92f528bcfbe9_f275c68a-5375-45b3-a599-86070220c998.jpg"
+        },
+
+
+        /* ================= THICKSHAKES ================= */
+
+        {
+            name: "Choco Chip Thickshake",
+            category: "Thickshakes",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Yummy Mango Thickshake",
+            category: "Thickshakes",
+            price: 109,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1553177595-4de26388f86e?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Oreo Thickshake",
+            category: "Thickshakes",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "KitKat Thickshake",
+            category: "Thickshakes",
+            price: 99,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Butterscotch Thickshake",
+            category: "Thickshakes",
+            price: 109,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=600&q=80"
+        },
+
+
+        /* ================= MOCKTAILS ================= */
+
+        {
+            name: "Lemonade Mocktail",
+            category: "Mocktails",
+            price: 59,
+            type: "Veg",
+            img: "https://thehealthfulideas.com/wp-content/uploads/2024/10/Lemon-Mocktail-11.jpg"
+        },
+
+        {
+            name: "Mint Lime Mojito",
+            category: "Mocktails",
+            price: 89,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRx5Cm1NBk2hRRdfLymb4HS8L0LC_mpsXx52rytfQA0LA&s=10"
+        },
+
+        {
+            name: "Aqua Splash Mojito",
+            category: "Mocktails",
+            price: 89,
+            type: "Veg",
+            img: "https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=600&q=80"
+        },
+
+        {
+            name: "Tropical Kiwi",
+            category: "Mocktails",
+            price: 89,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvSxpRaVhg__JsrVwo8tO0IZyPXmwBdKsVab7Tfqp2t0Ic0OqIwW22OtE&s=10"
+        },
+
+        {
+            name: "Red Wine Mojito",
+            category: "Mocktails",
+            price: 109,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2nyGFx-CPE1hF3VzZZuVDjwZd_leHQLk0k8rLblAdpMzPu7dFBRZFqpY&s=10"
+        },
+
+        {
+            name: "Watermelon Mojito",
+            category: "Mocktails",
+            price: 89,
+            type: "Veg",
+            img: "https://www.girlversusdough.com/wp-content/uploads/2019/06/watermelon-mojito-3.jpg"
+        },
+
+        {
+            name: "Green Apple Mojito",
+            category: "Mocktails",
+            price: 89,
+            type: "Veg",
+            img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShXCN_v927S4ViJeWmwhhUos-_KgBPusCSxXoNR7OUiGJPoa165-Vz2QC7&s=10"
+        }
+
+    ];
+
+
+    /* =========================================================
+       SAFE IMAGE HANDLING
+       IMPORTANT:
+       If an image fails, do NOT substitute another food.
+    ========================================================== */
+
+    /* =========================================================
+       FAST IMAGE LOADING
+       Keep every existing image URL unchanged.
+       Images are downloaded only shortly before they enter
+       the viewport instead of all at the same time.
+    ========================================================== */
+
+    const menuImageObserver = ('IntersectionObserver' in window)
+        ? new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+
+                const image = entry.target;
+                const source = image.dataset.src;
+
+                if (source && !image.src) {
+                    image.src = source;
+                    image.removeAttribute('data-src');
+                }
+
+                observer.unobserve(image);
+            });
+        }, {
+            rootMargin: '500px 0px',
+            threshold: 0.01
+        })
+        : null;
+
+    function loadMenuImage(image) {
+        const source = image.dataset.src;
+        if (!source || image.src) return;
+
+        image.src = source;
+        image.removeAttribute('data-src');
+    }
+
+
+    function createSafeImage(item) {
+
+        const wrapper = document.createElement('div');
+
+        wrapper.className = 'food-img-container';
+
+        const badge = document.createElement('span');
+
+        badge.className = 'food-badge';
+
+        badge.textContent = item.type;
+
+        wrapper.appendChild(badge);
+
+        const image = document.createElement('img');
+
+        /* IMPORTANT: Keep the EXACT original image URL.
+           The URL is stored in data-src and loaded only when needed.
+           This prevents all menu images from downloading at once. */
+        image.dataset.src = item.img;
+
+        image.alt = item.name;
+
+        image.loading = 'lazy';
+
+        image.decoding = 'async';
+
+        image.fetchPriority = 'low';
+
+        image.referrerPolicy = 'no-referrer';
+
+        image.classList.add('lazy-menu-image');
+
+        image.addEventListener('error', function() {
+
+            wrapper.innerHTML = '';
+
+            const fallback = document.createElement('div');
+
+            fallback.className = 'food-image-fallback';
+
+            fallback.innerHTML = `
+                <i class="fa-regular fa-image"></i>
+                <strong>Image unavailable</strong>
+                <span>${escapeHtml(item.name)}</span>
+            `;
+
+            wrapper.appendChild(fallback);
+
+        });
+
+        wrapper.appendChild(image);
+
+        if (menuImageObserver) {
+            menuImageObserver.observe(image);
+        } else {
+            loadMenuImage(image);
+        }
+
+        return wrapper;
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+    ========================================================== */
+
+    function escapeHtml(value) {
+
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+    }
+
+
+    /* =========================================================
+       RENDER MENU
+    ========================================================== */
+
+    const foodGrid = document.getElementById('foodGrid');
+
+    function renderMenu(items) {
+
+        foodGrid.innerHTML = '';
+
+        if (items.length === 0) {
+
+            foodGrid.innerHTML = `
+                <div class="no-results">
+                    <i class="fa-solid fa-mug-hot"></i>
+                    <h3>No food items found matching your search.</h3>
+                </div>
+            `;
+
+            return;
+        }
+
+        items.forEach(item => {
+
+            const card = document.createElement('div');
+
+            card.className = 'food-card';
+
+            const imageContainer = createSafeImage(item);
+
+            card.appendChild(imageContainer);
+
+            const details = document.createElement('div');
+
+            details.className = 'food-details';
+
+            details.innerHTML = `
+                <div>
+                    <span class="food-category-tag">
+                        ${escapeHtml(item.category)}
+                    </span>
+
+                    <h3 class="food-name">
+                        ${escapeHtml(item.name)}
+                    </h3>
+                </div>
+
+                <div class="food-footer">
+
+                    <span class="food-price">
+                        ₹${item.price}/-
+                    </span>
+
+                    <a
+                        href="tel:7075138829"
+                        class="browse-hint"
+                        style="text-decoration:none;"
+                    >
+                        <i class="fa-solid fa-phone"></i>
+                        Call to order
+                    </a>
+
+                </div>
+            `;
+
+            card.appendChild(details);
+
+            foodGrid.appendChild(card);
+
+        });
+
+    }
+
+
+    /* =========================================================
+       SPLASH + INITIAL RENDER
+       Do NOT wait for every external image to finish loading.
+       The page becomes visible after the HTML is ready.
+    ========================================================== */
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        renderMenu(menuItems);
+
+        const splash = document.getElementById('splash-screen');
+        const app = document.getElementById('app-container');
+
+        setTimeout(() => {
+
+            splash.classList.add('fade-out');
+            app.classList.add('show');
+
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 600);
+
+        }, 350);
+
+    });
+
+
+    /* =========================================================
+       MENU SEARCH + CATEGORY
+    ========================================================== */
+
+    const searchInput =
+        document.getElementById('searchInput');
+
+    const categoryContainer =
+        document.getElementById('categoryContainer');
+
+    const sectionTitle =
+        document.getElementById('sectionTitle');
+
+    let currentCategory = 'All';
+
+    let searchQuery = '';
+
+
+    function filterAndSearch() {
+
+        let filtered = menuItems;
+
+        if (currentCategory !== 'All') {
+
+            filtered = filtered.filter(item =>
+                item.category.toLowerCase() ===
+                currentCategory.toLowerCase()
+            );
+
+        }
+
+        if (searchQuery.trim() !== '') {
+
+            filtered = filtered.filter(item =>
+                item.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase().trim())
+            );
+
+        }
+
+        renderMenu(filtered);
+
+    }
+
+
+    categoryContainer.addEventListener('click', (e) => {
+
+        const btn = e.target.closest('.cat-btn');
+
+        if (!btn) return;
+
+        document
+            .querySelectorAll('.cat-btn')
+            .forEach(b => b.classList.remove('active'));
+
+        btn.classList.add('active');
+
+        currentCategory =
+            btn.getAttribute('data-category');
+
+        sectionTitle.innerHTML = `
+            <i class="fa-solid fa-utensils"></i>
+            ${
+                currentCategory === 'All'
+                ? 'Our Delicious Menu'
+                : currentCategory + ' Menu'
+            }
+        `;
+
+        filterAndSearch();
+
+    });
+
+
+    searchInput.addEventListener('input', (e) => {
+
+        searchQuery = e.target.value;
+
+        filterAndSearch();
+
+    });
+
+
+    /* =========================================================
+       CAMPUS BITE AI
+       MENU-DATA BASED ASSISTANT
+    ========================================================== */
+
+    const aiChatButton =
+        document.getElementById('aiChatButton');
+
+    const aiChatWindow =
+        document.getElementById('aiChatWindow');
+
+    const aiCloseButton =
+        document.getElementById('aiCloseButton');
+
+    const aiChatMessages =
+        document.getElementById('aiChatMessages');
+
+    const aiChatInput =
+        document.getElementById('aiChatInput');
+
+    const aiSendButton =
+        document.getElementById('aiSendButton');
+
+
+    /* =========================================================
+       OPEN / CLOSE CHAT
+    ========================================================== */
+
+    aiChatButton.addEventListener('click', () => {
+
+        aiChatWindow.classList.add('active');
+
+        setTimeout(() => {
+            aiChatInput.focus();
+        }, 150);
+
+    });
+
+
+    aiCloseButton.addEventListener('click', () => {
+
+        aiChatWindow.classList.remove('active');
+
+    });
+
+
+    /* =========================================================
+       ADD CHAT MESSAGE
+    ========================================================== */
+
+    function addChatMessage(text, sender = 'assistant') {
+
+        const row = document.createElement('div');
+
+        row.className =
+            `ai-message-row ${sender}`;
+
+        const message = document.createElement('div');
+
+        message.className = 'ai-message';
+
+        message.innerHTML = text;
+
+        row.appendChild(message);
+
+        aiChatMessages.appendChild(row);
+
+        aiChatMessages.scrollTop =
+            aiChatMessages.scrollHeight;
+
+    }
+
+
+    /* =========================================================
+       TYPING INDICATOR
+    ========================================================== */
+
+    function showTyping() {
+
+        const row = document.createElement('div');
+
+        row.className =
+            'ai-message-row assistant';
+
+        row.id = 'typingRow';
+
+        row.innerHTML = `
+            <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+
+        aiChatMessages.appendChild(row);
+
+        aiChatMessages.scrollTop =
+            aiChatMessages.scrollHeight;
+
+    }
+
+
+    function hideTyping() {
+
+        const typing =
+            document.getElementById('typingRow');
+
+        if (typing) {
+            typing.remove();
+        }
+
+    }
+
+
+    /* =========================================================
+       NORMALIZE TEXT
+    ========================================================== */
+
+    function normalizeText(text) {
+
+        return text
+            .toLowerCase()
+            .replace(/[₹$]/g, ' ')
+            .replace(/[^\w\s']/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+    }
+
+
+    /* =========================================================
+       ITEM FORMATTER
+    ========================================================== */
+
+    function formatItems(items, limit = 20) {
+
+        if (!items.length) {
+            return '';
+        }
+
+        const shownItems =
+            items.slice(0, limit);
+
+        let html = '';
+
+        shownItems.forEach(item => {
+
+            html += `
+                <div class="ai-item">
+                    <span class="ai-item-name">
+                        ${escapeHtml(item.name)}
+                    </span>
+
+                    <span class="ai-item-price">
+                        ₹${item.price}
+                    </span>
+                </div>
+            `;
+
+        });
+
+        if (items.length > limit) {
+
+            html += `
+                <div style="margin-top:8px;font-size:0.75rem;color:#747d8c;">
+                    Showing ${limit} of ${items.length} matching items.
+                    Use the website search to see the rest.
+                </div>
+            `;
+
+        }
+
+        return html;
+
+    }
+
+
+    /* =========================================================
+       CATEGORY ICON
+    ========================================================== */
+
+    function categoryIcon(category) {
+
+        const icons = {
+
+            "Pizza": "🍕",
+            "Burger": "🍔",
+            "Pasta": "🍝",
+            "Milkshake": "🥤",
+            "Falooda": "🍨",
+            "Sandwich": "🥪",
+            "Wraps": "🌯",
+            "Fried Chicken": "🍗",
+            "French Fries": "🍟",
+            "Waffles": "🧇",
+            "Quick Bites": "🍴",
+            "Chicken Wings": "🍗",
+            "Momos": "🥟",
+            "Thickshakes": "🥛",
+            "Mocktails": "🍹"
+
+        };
+
+        return icons[category] || "🍴";
+
+    }
+
+
+    /* =========================================================
+       FIND EXACT ITEM
+    ========================================================== */
+
+    function findExactItem(query) {
+
+        const normalized =
+            normalizeText(query);
+
+        return menuItems.find(item =>
+            normalizeText(item.name) === normalized
+        );
+
+    }
+
+
+    /* =========================================================
+       CATEGORY SEARCH
+    ========================================================== */
+
+    function findCategory(query) {
+
+        const normalized =
+            normalizeText(query);
+
+        return menuItems.find(item => {
+
+            return normalized.includes(
+                normalizeText(item.category)
+            );
+
+        });
+
+    }
+
+
+    /* =========================================================
+       AI RESPONSE ENGINE
+       IMPORTANT:
+       ONLY USES ACTUAL menuItems DATA.
+    ========================================================== */
+
+    function generateAIResponse(userText) {
+
+        const query =
+            normalizeText(userText);
+
+        if (!query) {
+
+            return `
+                Please tell me what you're looking for.
+                😊
+            `;
+
+        }
+
+
+        /* ================= GREETING ================= */
+
+        if (
+            /^(hi|hello|hey|hai|hii|good morning|good afternoon|good evening)$/
+                .test(query)
+        ) {
+
+            return `
+                👋 Hello! Welcome to <strong>Campus Bite</strong>.<br><br>
+                I can help you find food, check prices,
+                compare items, and recommend something from
+                our actual menu.
+            `;
+
+        }
+
+
+        /* ================= ORDERING INFORMATION ================= */
+        if (
+            query.includes('how to order') ||
+            query.includes('how can i order') ||
+            query.includes('how do i order') ||
+            query.includes('where can i order') ||
+            query.includes('place an order') ||
+            query.includes('place order') ||
+            query.includes('order food') ||
+            query.includes('order the food') ||
+            query.includes('how to buy') ||
+            query.includes('buy food') ||
+            query.includes('ordering food') ||
+            query === 'order' ||
+            query === 'orders'
+        ) {
+            return `
+                📞 <strong>How to order from Campus Bite</strong><br><br>
+                To place your food order, please call:<br><br>
+                <a href="tel:7075138829"
+                   style="display:inline-block;color:var(--primary);font-weight:800;font-size:1.15rem;text-decoration:none;">
+                    📱 70751 38829
+                </a><br><br>
+                You can also tap the phone number on the website to call directly.
+            `;
+        }
+
+
+        /* ================= CAMPUS BITE ADDRESS ================= */
+        if (
+            query.includes('address') ||
+            query.includes('location') ||
+            query.includes('where is campus bite') ||
+            query.includes('where is campusbite') ||
+            query.includes('where can i find campus bite') ||
+            query.includes('where can i find campusbite') ||
+            query.includes('campus bite location')
+        ) {
+            return `
+                📍 <strong>Campus Bite Address</strong><br><br>
+                Opposite to the <strong>Krishna Kitchen</strong>,
+                near <strong>Vignan University</strong>.
+            `;
+        }
+
+
+        /* ================= THANK YOU ================= */
+
+        if (
+            query.includes('thank you') ||
+            query === 'thanks' ||
+            query === 'thank'
+        ) {
+
+            return `
+                You're welcome! 😊<br>
+                Enjoy your meal at <strong>Campus Bite</strong>! 🍕
+            `;
+
+        }
+
+
+        /* ================= SHOW MENU ================= */
+
+        if (
+            query.includes('show menu') ||
+            query.includes('view menu') ||
+            query === 'menu' ||
+            query.includes('what do you have') ||
+            query.includes('what food do you have') ||
+            query.includes('available food')
+        ) {
+
+            const categories =
+                [...new Set(menuItems.map(item => item.category))];
+
+            let html = `
+                🍽️ We currently have
+                <strong>${menuItems.length}</strong>
+                menu items across these categories:<br><br>
+            `;
+
+            categories.forEach(category => {
+
+                html += `
+                    ${categoryIcon(category)}
+                    <strong>${escapeHtml(category)}</strong>
+                    <br>
+                `;
+
+            });
+
+            html += `
+                <br>
+                Ask me something like
+                <strong>"What pizzas do you have?"</strong>
+                or
+                <strong>"Show me items under ₹150."</strong>
+            `;
+
+            return html;
+
+        }
+
+
+        /* ================= CATEGORIES ================= */
+
+        if (
+            query.includes('categories') ||
+            query.includes('category') ||
+            query.includes('types of food')
+        ) {
+
+            const categories =
+                [...new Set(menuItems.map(item => item.category))];
+
+            return `
+                📋 Our available categories are:<br><br>
+                ${categories.map(category =>
+                    `${categoryIcon(category)} ${escapeHtml(category)}`
+                ).join('<br>')}
+            `;
+
+        }
+
+
+        /* ================= CHEAPEST ================= */
+
+        if (
+            query.includes('cheapest') ||
+            query.includes('lowest price') ||
+            query.includes('least expensive') ||
+            query.includes('cheapest item')
+        ) {
+
+            const lowestPrice =
+                Math.min(...menuItems.map(item => item.price));
+
+            const cheapest =
+                menuItems.filter(item =>
+                    item.price === lowestPrice
+                );
+
+            return `
+                💰 The cheapest menu item price is
+                <strong>₹${lowestPrice}</strong>.<br><br>
+                ${formatItems(cheapest)}
+            `;
+
+        }
+
+
+        /* ================= MOST EXPENSIVE ================= */
+
+        if (
+            query.includes('most expensive') ||
+            query.includes('highest price') ||
+            query.includes('costliest')
+        ) {
+
+            const highestPrice =
+                Math.max(...menuItems.map(item => item.price));
+
+            const expensive =
+                menuItems.filter(item =>
+                    item.price === highestPrice
+                );
+
+            return `
+                💎 The highest-priced items are
+                <strong>₹${highestPrice}</strong>.<br><br>
+                ${formatItems(expensive)}
+            `;
+
+        }
+
+
+        /* ================= UNDER BUDGET ================= */
+
+        const budgetMatch =
+            query.match(
+                /(?:under|below|less than|within|up to|max(?:imum)?)[^\d]{0,10}(\d+)/
+            );
+
+        if (budgetMatch) {
+
+            const budget =
+                Number(budgetMatch[1]);
+
+            const results =
+                menuItems
+                    .filter(item => item.price <= budget)
+                    .sort((a,b) => a.price - b.price);
+
+            if (!results.length) {
+
+                return `
+                    Sorry, there are no menu items
+                    at or below <strong>₹${budget}</strong>
+                    in the current menu data.
+                `;
+
+            }
+
+            return `
+                💰 Here are items at or below
+                <strong>₹${budget}</strong>:<br><br>
+                ${formatItems(results)}
+            `;
+
+        }
+
+
+        /* ================= NON VEG ================= */
+        /* IMPORTANT: Check NON-VEG BEFORE VEG.
+           "non veg" contains the word "veg", so checking VEG first
+           would incorrectly return vegetarian items. */
+
+        if (
+            query.includes('non veg') ||
+            query.includes('non vegetarian') ||
+            query.includes('nonveg') ||
+            query.includes('chicken items') ||
+            query.includes('chicken food') ||
+            query.includes('chicken') ||
+            query.includes('meat items') ||
+            query.includes('meat food') ||
+            query.includes('non veg items') ||
+            query.includes('non vegetarian items')
+        ) {
+
+            const results =
+                menuItems.filter(item =>
+                    item.type.toLowerCase() === 'non-veg'
+                );
+
+            return `
+                🍗 Here are all the non-vegetarian items
+                available at <strong>Campus Bite</strong>:<br><br>
+                ${formatItems(results, results.length)}
+            `;
+
+        }
+
+
+        /* ================= VEG ================= */
+
+        if (
+            query === 'veg' ||
+            query.includes('vegetarian') ||
+            query.includes('vegetarian items') ||
+            query.includes('veg items') ||
+            query.includes('veg food') ||
+            query.includes('vegetarian food')
+        ) {
+
+            const results =
+                menuItems.filter(item =>
+                    item.type.toLowerCase() === 'veg'
+                );
+
+            return `
+                🌱 Here are all the vegetarian items
+                available at <strong>Campus Bite</strong>:<br><br>
+                ${formatItems(results, results.length)}
+            `;
+
+        }
+
+
+        /* ================= EXACT ITEM ================= */
+
+        const exactItem =
+            findExactItem(userText);
+
+        if (exactItem) {
+
+            if (
+                query.includes('price') ||
+                query.includes('cost') ||
+                query.includes('how much')
+            ) {
+
+                return `
+                    💰 <strong>${escapeHtml(exactItem.name)}</strong>
+                    costs <strong>₹${exactItem.price}</strong>.
+                `;
+
+            }
+
+            return `
+                🍽️ <strong>${escapeHtml(exactItem.name)}</strong><br><br>
+                Category: <strong>${escapeHtml(exactItem.category)}</strong><br>
+                Type: <strong>${escapeHtml(exactItem.type)}</strong><br>
+                Price: <strong>₹${exactItem.price}</strong>
+            `;
+
+        }
+
+
+        /* ================= PRICE + PARTIAL ITEM ================= */
+
+        if (
+            query.includes('price') ||
+            query.includes('cost') ||
+            query.includes('how much')
+        ) {
+
+            const matches =
+                menuItems.filter(item => {
+
+                    const itemWords =
+                        normalizeText(item.name)
+                            .split(' ');
+
+                    return itemWords.some(word =>
+                        word.length >= 3 &&
+                        query.includes(word)
+                    );
+
+                });
+
+            if (matches.length) {
+
+                return `
+                    💰 Here are the matching prices:<br><br>
+                    ${formatItems(matches)}
+                `;
+
+            }
+
+        }
+
+
+        /* ================= CATEGORY QUESTIONS ================= */
+
+        const categoryKeywords = [
+
+            'pizza',
+            'pizzas',
+            'burger',
+            'burgers',
+            'pasta',
+            'pastas',
+            'milkshake',
+            'milkshakes',
+            'falooda',
+            'faloodas',
+            'sandwich',
+            'sandwiches',
+            'wrap',
+            'wraps',
+            'fried chicken',
+            'fries',
+            'waffle',
+            'waffles',
+            'quick bites',
+            'wings',
+            'momos',
+            'momo',
+            'thickshake',
+            'thickshakes',
+            'mocktail',
+            'mocktails'
+        ];
+
+        const foundKeyword =
+            categoryKeywords.find(keyword =>
+                query.includes(keyword)
+            );
+
+        if (foundKeyword) {
+
+            let category = null;
+
+            if (
+                foundKeyword === 'pizza' ||
+                foundKeyword === 'pizzas'
+            ) category = 'Pizza';
+
+            else if (
+                foundKeyword === 'burger' ||
+                foundKeyword === 'burgers'
+            ) category = 'Burger';
+
+            else if (
+                foundKeyword === 'pasta' ||
+                foundKeyword === 'pastas'
+            ) category = 'Pasta';
+
+            else if (
+                foundKeyword === 'milkshake' ||
+                foundKeyword === 'milkshakes'
+            ) category = 'Milkshake';
+
+            else if (
+                foundKeyword === 'falooda' ||
+                foundKeyword === 'faloodas'
+            ) category = 'Falooda';
+
+            else if (
+                foundKeyword === 'sandwich' ||
+                foundKeyword === 'sandwiches'
+            ) category = 'Sandwich';
+
+            else if (
+                foundKeyword === 'wrap' ||
+                foundKeyword === 'wraps'
+            ) category = 'Wraps';
+
+            else if (
+                foundKeyword === 'fried chicken'
+            ) category = 'Fried Chicken';
+
+            else if (
+                foundKeyword === 'fries'
+            ) category = 'French Fries';
+
+            else if (
+                foundKeyword === 'waffle' ||
+                foundKeyword === 'waffles'
+            ) category = 'Waffles';
+
+            else if (
+                foundKeyword === 'quick bites'
+            ) category = 'Quick Bites';
+
+            else if (
+                foundKeyword === 'wings'
+            ) category = 'Chicken Wings';
+
+            else if (
+                foundKeyword === 'momo' ||
+                foundKeyword === 'momos'
+            ) category = 'Momos';
+
+            else if (
+                foundKeyword === 'thickshake' ||
+                foundKeyword === 'thickshakes'
+            ) category = 'Thickshakes';
+
+            else if (
+                foundKeyword === 'mocktail' ||
+                foundKeyword === 'mocktails'
+            ) category = 'Mocktails';
+
+
+            if (category) {
+
+                const results =
+                    menuItems.filter(item =>
+                        item.category === category
+                    );
+
+                return `
+                    ${categoryIcon(category)}
+                    Here are <strong>all available ${escapeHtml(category)}</strong>
+                    items at Campus Bite, with their prices:<br><br>
+                    ${formatItems(results, results.length)}
+                `;
+
+            }
+
+        }
+
+
+        /* ================= SPICY ================= */
+
+        if (
+            query.includes('spicy') ||
+            query.includes('hot food') ||
+            query.includes('spice')
+        ) {
+
+            const spicyWords = [
+                'peri peri',
+                'tandoori',
+                'arrabbiata',
+                'masala',
+                'zesty',
+                'tango',
+                'blaze',
+                'zing',
+                'dragon'
+            ];
+
+            const results =
+                menuItems.filter(item => {
+
+                    const name =
+                        normalizeText(item.name);
+
+                    return spicyWords.some(word =>
+                        name.includes(word)
+                    );
+
+                });
+
+            if (results.length) {
+
+                return `
+                    🌶️ Based only on the item names,
+                    these may be suitable if you want
+                    something spicy or flavourful:<br><br>
+                    ${formatItems(results)}
+                    <br>
+                    <small style="color:#747d8c;">
+                        Note: the menu data does not provide
+                        detailed spice levels, so I cannot confirm
+                        how spicy each item actually is.
+                    </small>
+                `;
+
+            }
+
+        }
+
+
+        /* ================= RECOMMENDATION ================= */
+
+        if (
+            query.includes('recommend') ||
+            query.includes('suggest') ||
+            query.includes('what should i eat') ||
+            query.includes('what do you recommend') ||
+            query.includes('something good')
+        ) {
+
+            const recommended =
+                [...menuItems]
+                    .sort((a,b) => a.price - b.price)
+                    .slice(0, 6);
+
+            return `
+                ⭐ Here are some options from our actual menu
+                that you can consider:<br><br>
+                ${formatItems(recommended, 6)}
+                <br>
+                Tell me your preference, such as
+                <strong>veg</strong>,
+                <strong>chicken</strong>,
+                <strong>pizza</strong>,
+                or a budget like
+                <strong>under ₹100</strong>.
+            `;
+
+        }
+
+
+        /* ================= COMPARE ================= */
+
+        if (
+            query.includes('compare') ||
+            query.includes('difference between')
+        ) {
+
+            const matches =
+                menuItems.filter(item => {
+
+                    const words =
+                        normalizeText(item.name)
+                            .split(' ');
+
+                    return words.some(word =>
+                        word.length > 3 &&
+                        query.includes(word)
+                    );
+
+                });
+
+            const unique =
+                [...new Map(
+                    matches.map(item => [item.name,item])
+                ).values()];
+
+            if (unique.length >= 2) {
+
+                return `
+                    ⚖️ Here is the comparison based
+                    on the available menu data:<br><br>
+                    ${formatItems(unique, 10)}
+                `;
+
+            }
+
+            return `
+                I can compare menu items, but please
+                mention the two item names you want to compare.
+            `;
+
+        }
+
+
+        /* ================= DESSERTS ================= */
+
+        if (
+            query.includes('dessert') ||
+            query.includes('desserts') ||
+            query.includes('sweet')
+        ) {
+
+            const dessertCategories = [
+                'Falooda',
+                'Waffles'
+            ];
+
+            const results =
+                menuItems.filter(item =>
+                    dessertCategories.includes(item.category)
+                );
+
+            return `
+                🍨 Based on the menu categories,
+                these are the dessert-style options available:<br><br>
+                ${formatItems(results)}
+            `;
+
+        }
+
+
+        /* ================= SEARCH MENU ITEMS ================= */
+
+        const searchMatches =
+            menuItems.filter(item => {
+
+                const name =
+                    normalizeText(item.name);
+
+                const category =
+                    normalizeText(item.category);
+
+                return (
+                    name.includes(query) ||
+                    query.includes(name) ||
+                    category.includes(query)
+                );
+
+            });
+
+
+        if (searchMatches.length) {
+
+            return `
+                🔎 I found these matching menu items:<br><br>
+                ${formatItems(searchMatches)}
+            `;
+
+        }
+
+
+        /* ================= UNKNOWN QUESTION ================= */
+
+        return `
+            Sorry, I don't have that information in the
+            Campus Bite menu data. 😊<br><br>
+
+            I can help with:
+            <br>🍕 Food items and complete category lists
+            <br>💰 Prices and rates
+            <br>🌱 Vegetarian items
+            <br>🍗 Non-vegetarian items
+            <br>📞 How to order
+            <br>📍 Campus Bite address
+            <br>📋 Categories
+            <br>⭐ Recommendations
+            <br>💵 Items within a budget
+            <br>⚖️ Menu comparisons
+            <br><br>
+
+            Try asking:
+            <strong>"What pizzas are available?"</strong>,
+            <strong>"Show me non-veg items."</strong>,
+            or <strong>"How do I order food?"</strong>
+        `;
+
+    }
+
+
+    /* =========================================================
+       SEND MESSAGE
+    ========================================================== */
+
+    function sendAIMessage(text = null) {
+
+        const userText =
+            text !== null
+            ? text
+            : aiChatInput.value.trim();
+
+        if (!userText) return;
+
+        addChatMessage(
+            escapeHtml(userText),
+            'user'
+        );
+
+        aiChatInput.value = '';
+
+        showTyping();
+
+        setTimeout(() => {
+
+            hideTyping();
+
+            const response =
+                generateAIResponse(userText);
+
+            addChatMessage(
+                response,
+                'assistant'
+            );
+
+        }, 450);
+
+    }
+
+
+    aiSendButton.addEventListener(
+        'click',
+        () => sendAIMessage()
+    );
+
+
+    aiChatInput.addEventListener(
+        'keydown',
+        (e) => {
+
+            if (e.key === 'Enter') {
+
+                e.preventDefault();
+
+                sendAIMessage();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       QUICK BUTTONS
+    ========================================================== */
+
+    document
+        .querySelectorAll('.quick-btn')
+        .forEach(button => {
+
+            button.addEventListener('click', () => {
+
+                const question =
+                    button.getAttribute('data-question');
+
+                sendAIMessage(question);
+
+            });
+
+        });
+
+
+    /* =========================================================
+       CLOSE CHAT WITH ESCAPE
+    ========================================================== */
+
+    document.addEventListener('keydown', (e) => {
+
+        if (e.key === 'Escape') {
+
+            aiChatWindow.classList.remove('active');
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
